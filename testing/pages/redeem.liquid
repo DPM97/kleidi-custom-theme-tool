@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <title>{{ name }} | Redeem</title>
+  </head>
+  <body>
+    {% include 'partials/header.liquid' %}
+    <div class="mainBody">
+      {% if msg %}
+      <div class="flash-container"></div>
+      {% endif %}
+      <div class="main">
+        <div class="main_inner">
+          <fieldset class="card_container container">
+            <legend>
+              Redeem
+            </legend>
+            <div class="col">
+              <form
+                action="/dashboard/redeem"
+                id="payment-form"
+                method="post"
+              >
+                <div class="row purchase_field">
+                  <label class="purchase_label">Key</label>
+                  <input placeholder="xxxx-xxxx-xxxx-xxxx" name="license" type="text" />
+                </div>
+                <div class="update_billing_btn row">
+                  <button type="submit">Redeem</button>
+                </div>
+              </form>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      {% include 'partials/footer.liquid' %}
+    </div>
+  </body>
+</html>

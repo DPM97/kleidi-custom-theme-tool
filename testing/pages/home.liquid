@@ -1,0 +1,236 @@
+<html>
+  <head>
+    <title>{{ name }} | Home</title>
+  </head>
+  <body>
+    {% include 'partials/header.liquid' %}
+    <div class="mainBody">
+      {% if msg %}
+      <div class="flash-container"></div>
+      {% endif %}
+      <div class="main">
+        <div class="main_inner">
+          <h2 class="site_name fade-in">{{ serviceId }}</h2>
+          <h2 class="site_description fade-in">
+            {{ slogan }}
+          </h2>
+          {% if password %}
+          <fieldset class="card_container container">
+            <legend>Password</legend>
+            <div class="col">
+              <form action="/unlock" id="payment-form" method="post">
+                <input
+                  type="hidden"
+                  id="publishable_key"
+                  value="{{ publishable_key }}"
+                />
+                <div class="row purchase_field">
+                  <input type="text" name="password" />
+                </div>
+                <div class="row">
+                  <button class="enter_site_btn purchase_btn button_m_bottom">
+                    Enter Site
+                  </button>
+                </div>
+              </form>
+            </div>
+          </fieldset>
+          {% else %}
+          {% if bundles.length > 0 %}
+          <fieldset class="purchase container">
+            <legend>Purchase</legend>
+            <div class="col">
+              <form action="/stripe/checkout" method="post" id="payment-form">
+                <input
+                  type="hidden"
+                  id="publishable_key"
+                  value="{{ publishable_key }}"
+                />
+                <div class="row purchase_field">
+                  <label class="purchase_label">Full Name</label>
+                  <input
+                    placeholder="John Doe"
+                    type="text"
+                    value=""
+                    name="fullName"
+                    id="fullName"
+                  />
+                </div>
+                <div class="row purchase_field">
+                  <label class="purchase_label">Email</label>
+                  <input
+                    placeholder="admin@kleidi.io"
+                    type="email"
+                    value=""
+                    name="email"
+                    id="email"
+                  />
+                </div>
+                <div class="row double_purchase">
+                  <div class="col-5 purchase_field">
+                    <label class="purchase_label">Coupon Code</label>
+                    <input
+                      placeholder="50OFF"
+                      type="text"
+                      value=""
+                      name="coupon"
+                      id="coupon"
+                    />
+                  </div>
+                  {% if referral %}
+                  <div class="col-5 purchase_field">
+                    <label class="purchase_label">Referral Code</label>
+                    <input
+                      placeholder="2jlxkwl"
+                      type="text"
+                      value="{{ referral }}"
+                      name="referral"
+                      id="referral"
+                    />
+                  </div>
+                  {% else %}
+                  <div class="col-5 purchase_field">
+                    <label class="purchase_label">Referral Code</label>
+                    <input
+                      placeholder="2jlxkwl"
+                      type="text"
+                      value=""
+                      name="referral"
+                      id="referral"
+                    />
+                  </div>
+                  {% endif %}
+                </div>
+                <section id="customFields" style="width: 100%"></section>
+                <div class="row select_bundle">
+                  <label class="purchase_label">Bundle</label>
+                  <div class="select">
+                    <select name="bundle" id="bundle">
+                      {% for bundle in bundles %}
+                      <option value="{{ bundle.billingPlanID }}">
+                        {{ bundle.displayTitle }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="card">
+                  <div id="card-element" class="field"></div>
+                </div>
+                <div class="row">
+                  {% if user %}
+                  <button
+                    class="purchase_btn fade-in"
+                    id="submit-button"
+                    type="submit"
+                  >
+                    {% if subscribed %} Upgrade {% else %} Purchase {% endif %}
+                  </button>
+                  {% else %}
+                  <button
+                    class="purchase_btn fade-in"
+                    disabled="disabled"
+                  >Log In</button>
+                  {% endif %}
+                </div>
+                <div class="row tos_text">
+                  {% if tos_uri %}
+                  <p>
+                    By purchasing you are agreeing to our
+                    <a class="bold" href="{{ tos_url }}">Terms Of Service</a>
+                  </p>
+                  {% endif %}
+                </div>
+              </form>
+            </div>
+          </fieldset>
+          {% else %}
+          <fieldset class="card_container container">
+            <legend>Purchase</legend>
+            <div class="col">
+              <p class="soldout">Sold Out :(</p>
+            </div>
+          </fieldset>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      {% if features %}
+      <div class="features" id="features">
+        <h2 class="fade-in features_header">Features</h2>
+        <div class="container">
+          {% for featureList in featuresData %}
+          <div class="row feature_row">
+            {% for feature in featureList %}
+            <div class="col feature">
+              <p>{{ feature.name }}</p>
+              <br />
+              <p class="feature_body">
+                {{ feature.value }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %} {% if faq %}
+      <div class="container faq" id="faq">
+        <h2 class="fade-in faq_header">Faq</h2>
+        {% for question in faqData %}
+        <div class="row faq_row">
+          <div class="col">
+            <p>{{ question.question }}</p>
+            <p class="faq_body">
+              {{ question.answer }}
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% include 'partials/footer.liquid' %}
+    </div>
+    {% if password == false %}
+    <script>
+      const bundles = JSON.parse('{{ bundles | json }}');
+      const updateFields = () => {
+        for (bundle of bundles) {
+          let fields = bundle.customFields;
+          if (bundle.billingPlanID == $('#bundle').val()) {
+            $('#customFields').empty();
+            for (field of fields) {
+              $('#customFields').append(`
+                      <div class="row purchase_field">
+                        <label class="purchase_label">${field.name}</label>
+                        <input type="text" name="custom[${
+                          field.name
+                        }]" autocomplete="off" placeholder="${field.name} ${
+                field.required ? '(Required)' : ''
+              }" />
+                      </div>
+                      `);
+              if (field.required)
+                $(`input[name="custom[${field.name}]"]`).prop('required', true);
+            }
+          }
+        }
+      };
+
+      // listen for any changes to bundle dropdown
+      $(document).on('change', '#bundle', () => {
+        updateFields();
+      });
+
+      // check selected bundle at load
+      $(document).ready(() => {
+        updateFields();
+      });
+    </script>
+    <script
+      src="https://kleidi-core-themes.s3.amazonaws.com/main/assets/js/stripe-elements.js"
+      data-rel-js
+    ></script>
+    {% endif %}
+  </body>
+</html>

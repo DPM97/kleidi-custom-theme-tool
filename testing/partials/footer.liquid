@@ -1,0 +1,30 @@
+<html>
+  {% if contact %}
+  <div class="container contact" id="contact">
+    <h2 class="fade-in contact_header">Contact</h2>
+    <div class="contacts">
+      {% if socials.instagram %}
+      <a href="{{ socials.instagram }}">
+        <i class="fa fa-instagram"></i>
+      </a>
+      {% endif %}
+      {% if socials.twitter %}
+      <a href="{{ socials.twitter }}">
+        <i class="fa fa-twitter"></i>
+      </a>
+      {% endif %}
+      {% if socials.email %}
+      <a href="{{ socials.email }}">
+        <i class="fa fa-envelope"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <footer>
+    <p class="tos_text">
+      Powered by <a class="bold" href="https://kleidi.io">Kleidi</a>
+    </p>
+  </footer>
+</html>

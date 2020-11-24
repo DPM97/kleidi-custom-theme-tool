@@ -1,198 +1,221 @@
-const express = require('express')
-const nunjucks = require('nunjucks')
+const express = require("express");
 const app = express();
-const http = require('http')
+const http = require("http");
 app.server = http.createServer(app);
-const router = express.Router();
-const path = require('path')
-app.set('view engine', 'njk');
-const opn = require('opn')
+const opn = require("opn");
+const { Liquid } = require("liquidjs");
+const path = require("path");
+const prompts = require("prompts");
 
-nunjucks.configure([
-    path.join(__dirname, `./theme`)
-], {
-    autoescape: true,
-    watch: true,
-    express: app
+let publishable_key;
+let engine;
+
+(async () => {
+  const response = await prompts([
+    {
+      type: "text",
+      name: "themeName",
+      message: "Theme Name (your service name): ",
+    },
+    {
+      type: "text",
+      name: "publishable_key",
+      message: "Stripe Testing Publishable Key: ",
+    },
+  ]);
+
+  publishable_key = response.publishable_key;
+
+  engine = new Liquid({
+    root: path.resolve(__dirname, `./${response.themeName}`),
+    extname: ".liquid",
+  });
+
+  app.use(express.static(__dirname));
+
+  app.engine("liquid", engine.express());
+
+  app.set("view engine", "liquid");
+
+  const serverOpts = {
+    host: "0.0.0.0",
+    port: process.env.PORT || 3000,
+  };
+
+  app.server.listen(serverOpts, () => {
+    app.on("shutdown", () => {
+      process.exit(0);
+    });
+    console.log(
+      `Server is running at http://127.0.0.1:${process.env.PORT || 3000}/pages`
+    );
+    opn(`http://127.0.0.1:${process.env.PORT || 3000}/pages`);
+  });
+})();
+
+app.get("/password", async (req, res) => {
+  const html = await engine.renderFile("pages/home", {
+    msg: {
+      type: "error",
+      content: "this is a error message",
+    },
+    password: true,
+    styles: {
+      background_color: "rgba(69, 67, 59, 1)",
+      header_color: "rgba(46, 87, 68, 0.8)",
+      text_primary: "rgba(255, 255, 255)",
+      text_secondary: "rgba(255, 255, 255, 0.5)",
+      text_tertiary: "rgba(255, 255, 255, 0.3)",
+      button_color: "rgba(90, 193, 142, 0.5)",
+      anti_button_color: "rgba(220, 73, 50, 0.5)",
+      button_color_hover: "rgba(90, 193, 142, 0.8)",
+      anti_button_color_hover: "rgba(220, 73, 50, 0.8)",
+      box_color: "rgba(95, 93, 85, 1)",
+    },
+    publishable_key: publishable_key,
+    logoURI: "https://kleidi.io/assets/img/hero.png",
+    serviceId: "Your Kleidi Site",
+    slogan: "This is a slogan for your site",
+    tos_url: "https://en.wikipedia.org/wiki/Type_of_service",
+  });
+  res.send(html);
 });
 
-
-const init = () => {
-    /* Express Init */
-    app.use('/assets', express.static(path.join(__dirname, `./theme/assets`)));
-    app.use('/assets/css', express.static(path.join(__dirname, `./theme/assets/css`))); /* noty lib */
-    app.use('/assets/js', express.static(path.join(__dirname, `./theme/assets/js`))); /* noty lib */
-    app.use('/assets/css', express.static(path.join(__dirname, `./node_modules/noty/lib/themes`))); /* noty lib */
-    app.use('/assets_custom', express.static(path.join(__dirname, `./theme/assets`)));
-}
-
-app.get('/', async (req, res) => {
-    res.locals.publishable_key = 'pk_test_slfKkHXWsDu0ujo2vfvfUrcQ'
-    return res.render('pages/home', {
-        'page': 'home',
-        'bundles': [  {
-            initialPrice: '50.00',
-            stockCount: 99,
-            referralValue: '0.00',
-            roles: [ '539605644312246036' ],
-            _id: '5e1dfaf7a1d2612c62252c42',
-            title: 'test',
-            type: 'stripe',
-            production: true,
-            interval: 'Monthly',
-            price: '20.00',
-            billingPlanID: 'plan_GXzR813min8Fcr',
-            dateCreated: '2020-01-14T17:31:35.785Z',
-            live: true,
-            __v: 0
-          }],
-        'currency': 'USD',
-        'user': {
-
-        },
-        'referral': 'exampleCode',
-        'password': false,
-        'subscribed': false
-    });
-})
-
-app.get('/dashboard', async (req, res) => {
-    res.locals.publishable_key = 'pk_test_slfKkHXWsDu0ujo2vfvfUrcQ'
-    res.locals.user = {
-        _id: 'j4l4j2k4j23k4j23k4j23k4j23k4j2k',
-        identifier: 'j42kfkdjklj23k4j2lk4jlkjvdsf',
-        discordID: '657969027377004616',
-        avi: 'be55f204b2c49ea79b4a4e857f0c4394',
-        username: 'test',
-        discriminator: '4023',
-        accessToken: 'k423jkh4j32hfdlfkj21kj3lk4jkslks',
-        __v: 0
-      }
-    return res.render('pages/profile', {
-        'general': {
-            key: 'A2QCA-92WVR-AGRQD-S9FVN',
-            bundle: {
-              initialPrice: '40.00',
-              stockCount: 71,
-              referralValue: '0.00',
-              roles: [ '539614330778288153' ],
-              _id: '5re7193426d216sf739fsaf5',
-              title: 'test',
-              type: 'stripe',
-              production: true,
-              interval: 'Monthly',
-              price: '5.00',
-              billingPlanID: 'plan_GvOLrNsfRtE3FGI',
-              dateCreated: '2019-12-04T02:26:17.198Z',
-              live: true,
-              __v: 0
-            },
-            deviceID: null,
-            membership: 'test',
-            email: 'admin@kleidi.io',
-            referralCode: 'K_PEkx-W',
-            balance: '0.00',
-            nextBillingDate: 'February 13, 2021',
-            cancel_at_period_end: false,
-            customer: {
-              id: 'cus_GXzNfsdjfKFk',
-              object: 'customer',
-              account_balance: 0,
-              address: null,
-              balance: 0,
-              created: 1579023719,
-              currency: 'usd',
-              default_source: null,
-              delinquent: false,
-              description: 'Key: A2QCA-92FVR-AGRRF-S9FVN',
-              discount: null,
-              email: 'admin@kleidi.io',
-              invoice_prefix: 'B5934DF',
-              invoice_settings: { custom_fields: null, default_payment_method: null, footer: null },
-              livemode: false,
-              metadata: {},
-              name: 'user name',
-              phone: null,
-              preferred_locales: [],
-              shipping: null,
-              sources: {
-                object: 'list',
-                data: [Array],
-                has_more: false,
-                total_count: 1,
-                url: ''
-              },
-              subscriptions: {
-                object: 'list',
-                data: [Array],
-                has_more: false,
-                total_count: 2,
-                url: ''
-              },
-              tax_exempt: 'none',
-              tax_ids: {
-                object: 'list',
-                data: [],
-                has_more: false,
-                total_count: 0,
-                url: ''
-              },
-              tax_info: null,
-              tax_info_verification: null
-            },
-            status: 'Trialing'
+app.get("/dashboard", async (req, res) => {
+  const html = await engine.renderFile("pages/dashboard", {
+    styles: {
+      background_color: "rgba(69, 67, 59, 1)",
+      header_color: "rgba(46, 87, 68, 0.8)",
+      text_primary: "rgba(255, 255, 255)",
+      text_secondary: "rgba(255, 255, 255, 0.5)",
+      text_tertiary: "rgba(255, 255, 255, 0.3)",
+      button_color: "rgba(90, 193, 142, 0.5)",
+      anti_button_color: "rgba(220, 73, 50, 0.5)",
+      button_color_hover: "rgba(90, 193, 142, 0.8)",
+      anti_button_color_hover: "rgba(220, 73, 50, 0.8)",
+      box_color: "rgba(95, 93, 85, 1)",
+    },
+    publishable_key: publishable_key,
+    logoURI: "https://kleidi.io/assets/img/hero.png",
+    user: {
+      discordID: "133377015536549889",
+      avi: "ba29156557baeb4d925b7029a0ccbda1",
+      username: "Yep",
+    },
+    general: {
+      cancel_at_period_end: true,
+      isLifetime: false,
+      deviceID: "laskdlaskdl",
+      status: "Active",
+      key: "KREK-KL2F-GHV4-4FSF",
+      referralCode: "klk4l3klkfl",
+      nextBillingDate: "August 20, 2020",
+      balance: "5.00",
+      bundle: {
+        customFields: [
+          {
+            name: "Testing Name",
+            value: "testing value",
           },
-        'page': 'dashboard',
-        'currency': 'USD'
-    });
-})
+        ],
+      },
+      customer: {
+        sources: {
+          data: [{ brand: "Visa", last4: "4592" }],
+        },
+        name: "Kleidi Admin",
+      },
+      email: "admin@kleidi.io",
+    },
+    currency: {
+      symbol: "$",
+    },
+  });
+  res.send(html);
+});
 
-app.get('/soldout', async (req, res) => {
-    return res.render('pages/home', {
-        'page': 'home',
-        'bundles': [],
-        'currency': 'USD',
-        'referral': 'example',
-        'password': false,
-        'subscribed': true
-    });
-})
+app.get("/redeem", async (req, res) => {
+  const html = await engine.renderFile("pages/redeem", {
+    msg: {
+      type: "error",
+      content: "this is a error message",
+    },
+    styles: {
+      background_color: "rgba(69, 67, 59, 1)",
+      header_color: "rgba(46, 87, 68, 0.8)",
+      text_primary: "rgba(255, 255, 255)",
+      text_secondary: "rgba(255, 255, 255, 0.5)",
+      text_tertiary: "rgba(255, 255, 255, 0.3)",
+      button_color: "rgba(90, 193, 142, 0.5)",
+      anti_button_color: "rgba(220, 73, 50, 0.5)",
+      button_color_hover: "rgba(90, 193, 142, 0.8)",
+      anti_button_color_hover: "rgba(220, 73, 50, 0.8)",
+      box_color: "rgba(95, 93, 85, 1)",
+    },
+  });
+  res.send(html);
+});
 
-app.get('/p/about', async (req, res) => {
-    return res.render('additional_pages/about', {
-    });
-})
+app.get("/soldout", async (req, res) => {
+  const html = await engine.renderFile("pages/home", {
+    msg: {
+      type: "error",
+      content: "this is a success message",
+    },
+    styles: {
+      background_color: "rgba(69, 67, 59, 1)",
+      header_color: "rgba(46, 87, 68, 0.8)",
+      text_primary: "rgba(255, 255, 255)",
+      text_secondary: "rgba(255, 255, 255, 0.5)",
+      text_tertiary: "rgba(255, 255, 255, 0.3)",
+      button_color: "rgba(90, 193, 142, 0.5)",
+      anti_button_color: "rgba(220, 73, 50, 0.5)",
+      button_color_hover: "rgba(90, 193, 142, 0.8)",
+      anti_button_color_hover: "rgba(220, 73, 50, 0.8)",
+      box_color: "rgba(95, 93, 85, 1)",
+    },
+    publishable_key: publishable_key,
+    logoURI: "https://kleidi.io/assets/img/hero.png",
+    serviceId: "Your Kleidi Site",
+    slogan: "This is a slogan for your site",
+    tos_url: "https://en.wikipedia.org/wiki/Type_of_service",
+  });
+  res.send(html);
+});
 
-app.get('/redeem', async (req, res) => {
-    return res.render('pages/redeem', {
-    });
-})
+app.get("/", async (req, res) => {
+  const html = await engine.renderFile("pages/home", {
+    msg: {
+      type: "error",
+      content: "this is a success message",
+    },
+    bundles: [
+      {
+        displayTitle: "test",
+        billingPlanID: "alskdlaksdlaksdl",
+      },
+    ],
+    styles: {
+      background_color: "rgba(69, 67, 59, 1)",
+      header_color: "rgba(46, 87, 68, 0.8)",
+      text_primary: "rgba(255, 255, 255)",
+      text_secondary: "rgba(255, 255, 255, 0.5)",
+      text_tertiary: "rgba(255, 255, 255, 0.3)",
+      button_color: "rgba(90, 193, 142, 0.5)",
+      anti_button_color: "rgba(220, 73, 50, 0.5)",
+      button_color_hover: "rgba(90, 193, 142, 0.8)",
+      anti_button_color_hover: "rgba(220, 73, 50, 0.8)",
+      box_color: "rgba(95, 93, 85, 1)",
+    },
+    publishable_key: publishable_key,
+    logoURI: "https://kleidi.io/assets/img/hero.png",
+    serviceId: "Your Kleidi Site",
+    slogan: "This is a slogan for your site",
+    tos_url: "https://en.wikipedia.org/wiki/Type_of_service",
+  });
+  res.send(html);
+});
 
-app.get('/password', async (req, res) => {
-    return res.render('pages/home', {
-        'page': 'home',
-        'bundles': [],
-        'currency': 'USD',
-        'referral': 'example',
-        'password': true,
-        'subscribed': true
-    });
-})
-
-app.get('/pages', async (req, res) => {
-    return res.sendFile('/public/main.html', {root: __dirname })
-})
-
-const serverOpts = {
-    host: '0.0.0.0',
-    port: process.env.PORT || 3000
-};
-
-init();
-app.server.listen(serverOpts, () => {
-    app.on('shutdown', () => {
-        process.exit(0);
-    });
-    console.log(`Server is running at http://127.0.0.1:${process.env.PORT || 3000}/pages`);
-    opn(`http://127.0.0.1:${process.env.PORT || 3000}/pages`)
+app.get("/pages", async (req, res) => {
+  return res.sendFile("./public/main.html", { root: __dirname });
 });

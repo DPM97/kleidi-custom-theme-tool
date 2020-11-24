@@ -22,8 +22,10 @@
     "babel-watch": "^7.0.0",
     "express": "^4.17.1",
     "http": "0.0.0",
+    "liquidjs": "^9.16.1",
     "noty": "^3.2.0-beta",
     "nunjucks": "^3.2.0",
-    "opn": "^6.0.0"
+    "opn": "^6.0.0",
+    "prompts": "^2.4.0"
   }
 }

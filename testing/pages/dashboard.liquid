@@ -1,0 +1,130 @@
+<html>
+  <head>
+    <title>{{ name }} | Dashboard</title>
+  </head>
+  <body>
+    {% include 'partials/header.liquid' %}
+    <div class="mainBody">
+      {% if msg %}
+      <div class="flash-container"></div>
+      {% endif %}
+      <div class="main">
+        <div class="main_inner">
+          <fieldset class="profile container">
+            <legend>
+              <img
+                class="proPic"
+                src="https://cdn.discordapp.com/avatars/{{ user.discordID }}/{{
+                  user.avi
+                }}.png"
+              />
+            </legend>
+            <div class="col profile_inner">
+              <p class="welcome_message">Welcome, {{ user.username }}!</p>
+              {% if general.status == 'Lifetime' %}
+              <button class="status green">{{ general.status }}</button>
+
+              <fieldset class="profile_addition container">
+                <legend>Key</legend>
+                <p>{{ general.key }}</p>
+              </fieldset>
+
+              {% else %} {% if general.status == 'Active' %}
+              <button class="status green">{{ general.status }}</button>
+              {% elsif general.status == 'Trialing' %}
+              <button class="status orange">{{ general.status }}</button>
+              {% else %}
+              <button class="status red">{{ general.status }}</button>
+              {% endif %}
+
+              <fieldset class="profile_addition container">
+                <legend>Key</legend>
+                <p>{{ general.key }}</p>
+              </fieldset>
+
+              <fieldset class="profile_addition container">
+                <legend>Referral Code</legend>
+                <p>{{ general.referralCode }}</p>
+              </fieldset>
+
+              <fieldset class="profile_addition container">
+                <legend>Balance</legend>
+                <p>{{ currency.symbol }}{{ general.balance }}</p>
+              </fieldset>
+
+              <fieldset class="profile_addition container">
+                <legend>Expiry</legend>
+                <p>{{ general.nextBillingDate }}</p>
+              </fieldset>
+              {% endif %}
+              <div class="activation">
+                <button class="activate_btn centered purchase_btn" onclick="location.href='/dashboard/activate'">Activate</button>
+                <button class="deactivate_btn centered purchase_btn" onclick="location.href='/dashboard/deactivate'">Deactivate</button>
+              </div>
+              {% if general.deviceID %}
+              <div class="unlink">
+                <button class="centered unlink_btn" onclick="location.href='/dashboard/deactivate/device'">Unlink Device</button>
+              </div>
+              {% endif %}
+            </div>
+          </fieldset>
+          {% if general.bundle.isLifetime == false %}
+          <fieldset class="card_container container">
+            <legend>
+              Payment Method: {% if general.customer.sources.data[0] %}
+              {{ general.customer.sources.data[0].brand }} -
+              {{ general.customer.sources.data[0].last4 }}
+              {% elsif %} N/A {% endif %}
+            </legend>
+            <div class="col">
+              <form
+                action="/dashboard/profile/update/billing"
+                id="payment-form"
+                method="post"
+              >
+                <input
+                  type="hidden"
+                  id="publishable_key"
+                  value="{{ publishable_key }}"
+                />
+                <div class="row purchase_field">
+                  <label class="purchase_label">Full Name</label>
+                  <input placeholder="John Doe" name="fullName" id="fullName" type="text" value="{{ general.customer.name }}" />
+                </div>
+                <div class="row purchase_field">
+                  <label class="purchase_label">Email</label>
+                  <input placeholder="admin@kleidi.io" name="email" id="email" type="email" value="{{ general.email }}" />
+                </div>
+                {% for meta in general.bundle.customFields %}
+                <div class="row purchase_field">
+                  <label class="purchase_label">{{ meta.name }}</label>
+                  <input type="text" name="meta[{{ meta.name }}]" value="{{ meta.value }}" />
+                </div>
+                {% endfor %}
+                <div class="card">
+                  <div id="card-element" class="field"></div>
+                </div>
+                {% if general.customer.sources.data[0] %}
+                <div class="update_billing_btn row">
+                  <button class="deactivate_btn purchase_btn" style="width: auto; min-width: 200px;" onclick="location.href='/dashboard/removeCard'">Remove Card</button>
+                </div>
+                {% endif %}
+                <div class="activation">
+                  <button class="activate_btn centered purchase_btn" style="width: auto; min-width: 200px;" type="submit" id="submit-button">Update Billing</button>
+                  {% if general.cancel_at_period_end %}
+                  <button class="activate_btn" style="width: auto; min-width: 200px;" onclick="location.href='/dashboard/uncancel'">Un-Cancel</button>
+                {% else %}
+                  <button class="deactivate_btn centered purchase_btn" style="width: auto; min-width: 200px;" onclick="location.href='/dashboard/cancel'">Cancel</button>
+                {% endif %}
+                </div>
+              </form>
+            </div>
+          </fieldset>
+          {% endif %}
+        </div>
+      </div>
+      {% include 'partials/footer.liquid' %}
+    </div>
+    <script src="https://kleidi-core-themes.s3.amazonaws.com/main/assets/js/stripe-elements.js" data-rel-js></script>
+  </body>
+</html>
